@@ -1,4 +1,5 @@
 package com.concurlite.engine.service;
+import com.concurlite.engine.domain.ResourceNotFoundException;
 
 import com.concurlite.engine.domain.Expense;
 import com.concurlite.engine.domain.ExpenseStatus;
@@ -24,7 +25,7 @@ public class ExpenseService {
         log.info("Creating expense for user ID: {}", request.getUserId());
 
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + request.getUserId()));
 
         Expense expense = new Expense();
         expense.setDescription(request.getDescription());
@@ -41,7 +42,7 @@ public class ExpenseService {
     public ExpenseResponse findById(Long id) {
         log.info("Fetching expense ID: {}", id);
         Expense expense = expenseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Expense not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Expense not found with ID: " + id));
         return toResponse(expense);
     }
 
