@@ -1,4 +1,5 @@
 package com.concurlite.engine.service;
+
 import com.concurlite.engine.domain.ResourceNotFoundException;
 
 import com.concurlite.engine.domain.Expense;
@@ -11,6 +12,9 @@ import com.concurlite.engine.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
+
+
 import java.util.List;
 
 @Slf4j
@@ -25,13 +29,16 @@ public class ExpenseService {
         log.info("Creating expense for user ID: {}", request.getUserId());
 
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + request.getUserId()));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Expense expense = new Expense();
         expense.setDescription(request.getDescription());
         expense.setAmount(request.getAmount());
         expense.setCategory(request.getCategory());
         expense.setUser(user);
+
+        // REGRA DE NEGÓCIO AQUI:
+        expense.setAuditFlag(request.getAmount().compareTo(new BigDecimal("5000.00")) > 0);
 
         Expense saved = expenseRepository.save(expense);
         log.info("Expense created with ID: {} | auditFlag: {}", saved.getId(), saved.isAuditFlag());

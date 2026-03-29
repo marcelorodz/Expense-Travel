@@ -41,11 +41,4 @@ public class Expense {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.status = ExpenseStatus.PENDING;
-        this.auditFlag = this.amount.compareTo(new BigDecimal("5000.00")) > 0;
-    }
 }

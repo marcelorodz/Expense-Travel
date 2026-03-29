@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: concurlite-db
+    environment:
+      POSTGRES_DB: concurlite
+      POSTGRES_USER: concurlite_user
+      POSTGRES_PASSWORD: concurlite123
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    container_name: concurlite-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/concurlite
+      SPRING_DATASOURCE_USERNAME: concurlite_user
+      SPRING_DATASOURCE_PASSWORD: concurlite123
+    depends_on:
+      - db
