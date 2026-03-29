@@ -14,6 +14,7 @@ A corporate expense processing REST API built with Spring Boot, PostgreSQL, and 
 | Persistence | Spring Data JPA + Hibernate |
 | Database | PostgreSQL 18 |
 | Build tool | Maven 3.9.14 |
+| Logging | SLF4J + Logback + logstash-logback-encoder 8.0 |
 | Utilities | Lombok |
 
 ---
@@ -26,7 +27,9 @@ com.concurlite.engine
 ├── repository      # JPA interfaces (UserRepository, ExpenseRepository)
 ├── service         # Business logic (ExpenseService, AuthService)
 ├── controller      # REST endpoints (ExpenseController, AuthController)
-├── dto             # Request/Response objects (ExpenseRequest, ExpenseResponse, AuthRequest, AuthResponse)
+├── dto             # Request/Response objects (ExpenseRequest, ExpenseResponse, AuthRequest, AuthResponse, ErrorResponse)
+├── exception       # Global exception handler (GlobalExceptionHandler)
+├── filter          # Request logging and correlation ID (RequestLoggingFilter)
 └── security        # JWT (JwtUtil, JwtFilter, SecurityConfig, CustomUserDetailsService)
 ```
 
@@ -229,16 +232,118 @@ INSERT INTO users (name, email, password, role) VALUES
 
 ---
 
+## Exception Handling
+
+All exceptions are handled centrally by `GlobalExceptionHandler` (`@RestControllerAdvice`), ensuring every error returns a consistent JSON contract — no stack traces are exposed to the client.
+
+### Error response format
+
+```json
+{
+  "timestamp": "2026-03-27T11:24:29",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Expense not found with ID: 999",
+  "path": "/api/expenses/999"
+}
+```
+
+### Handled exceptions
+
+| Exception | HTTP Status | Scenario |
+|---|---|---|
+| `ResourceNotFoundException` | 404 | Entity not found in database |
+| `BusinessException` | 400 | Business rule violation |
+| `MethodArgumentNotValidException` | 400 | `@Valid` field validation failure |
+| `BadCredentialsException` | 401 | Wrong email or password |
+| `AccessDeniedException` | 403 | User lacks required role |
+| `Exception` (fallback) | 500 | Unexpected server error |
+
+### Domain exceptions
+
+| Class | Usage |
+|---|---|
+| `ResourceNotFoundException` | Thrown when a `User` or `Expense` is not found by ID |
+| `BusinessException` | Thrown when a business rule is violated (e.g. invalid state transition) |
+
+### Design rationale
+
+- Controllers focus on the **happy path** only — no `try-catch` blocks
+- Exception handlers maintain **separation of concerns**
+- A single file controls the entire error contract — easy to maintain and evolve
+
+---
+
 ## Observability
 
-Every request is logged at the start and end using SLF4J with `@Slf4j` (Lombok):
+### Structured JSON Logs
+
+All logs are exported in JSON format using the `logstash-logback-encoder` library, configured via `logback-spring.xml`. This makes every log line directly indexable by tools like Splunk, Datadog, and ELK Stack.
+
+Every log entry contains the following fields:
+
+| Field | Description |
+|---|---|
+| `@timestamp` | When the event occurred (ISO 8601) |
+| `message` | The log message written with `@Slf4j` |
+| `logger_name` | The class that generated the log |
+| `thread_name` | The thread that processed the request |
+| `level` | Log severity (`INFO`, `WARN`, `ERROR`) |
+| `correlationId` | Unique ID that ties all logs from the same request together |
+
+**Example log output:**
+```json
+{
+  "@timestamp": "2026-03-29T17:03:52.447-03:00",
+  "@version": "1",
+  "message": "Login successful for email: manager@concurlite.com",
+  "logger_name": "com.concurlite.engine.service.AuthService",
+  "thread_name": "http-nio-8080-exec-3",
+  "level": "INFO",
+  "level_value": 20000,
+  "correlationId": "a3dde6e4-26bd-4419-8953-1a7a4422b4ea"
+}
+```
+
+### Correlation ID
+
+Every incoming request is assigned a unique `correlationId` (UUID) by `RequestLoggingFilter`, stored in the MDC (Mapped Diagnostic Context) and automatically appended to every log line generated during that request.
+
+This allows tracing the full journey of a single request across all layers:
 
 ```
-INFO - POST /api/expenses - start
-INFO - Creating expense for user ID: 1
-INFO - Expense created with ID: 1 | auditFlag: true
-INFO - POST /api/expenses - end | id: 1
+correlationId = "a3dde6e4-..."
+
+INFO - Authenticated request | user: manager@concurlite.com
+INFO - PATCH /api/expenses/approve/1 - start
+INFO - Approving expense ID: 1
+INFO - PATCH /api/expenses/approve/1 - end
 ```
+
+Filtering by `correlationId` in Splunk or Datadog returns the complete trace of that request — from the moment it entered port 8080 to the database response.
+
+### Logback configuration
+
+```xml
+<!-- src/main/resources/logback-spring.xml -->
+<configuration>
+    <appender name="jsonConsole" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="jsonConsole" />
+    </root>
+</configuration>
+```
+
+### Log levels used
+
+| Level | When |
+|---|---|
+| `INFO` | Normal flow — request start/end, successful operations |
+| `WARN` | Expected failures — resource not found, validation errors, access denied |
+| `ERROR` | Unexpected failures — unhandled exceptions, system errors |
 
 ---
 
@@ -248,7 +353,10 @@ INFO - POST /api/expenses - end | id: 1
 - [x] Expense CRUD
 - [x] Audit flag rule (amount > R$5,000)
 - [x] Role-based authorization (MANAGER / EMPLOYEE)
-- [x] Structured logging
+- [x] Global exception handler (@RestControllerAdvice)
+- [x] Structured JSON logs (logstash-logback-encoder)
+- [x] Correlation ID per request (MDC)
+- [ ] Environment variables (.env)
 - [ ] Unit tests with JUnit 5 + Mockito
 - [ ] Integration tests
 - [ ] Dockerfile (multi-stage build)
