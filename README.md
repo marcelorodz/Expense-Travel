@@ -26,7 +26,8 @@ com.concurlite.engine
 ├── repository      # JPA interfaces (UserRepository, ExpenseRepository)
 ├── service         # Business logic (ExpenseService, AuthService)
 ├── controller      # REST endpoints (ExpenseController, AuthController)
-├── dto             # Request/Response objects (ExpenseRequest, ExpenseResponse, AuthRequest, AuthResponse)
+├── dto             # Request/Response objects (ExpenseRequest, ExpenseResponse, AuthRequest, AuthResponse, ErrorResponse)
+├── exception       # Global exception handler (GlobalExceptionHandler)
 └── security        # JWT (JwtUtil, JwtFilter, SecurityConfig, CustomUserDetailsService)
 ```
 
@@ -229,6 +230,48 @@ INSERT INTO users (name, email, password, role) VALUES
 
 ---
 
+## Exception Handling
+
+All exceptions are handled centrally by `GlobalExceptionHandler` (`@RestControllerAdvice`), ensuring every error returns a consistent JSON contract — no stack traces are exposed to the client.
+
+### Error response format
+
+```json
+{
+  "timestamp": "2026-03-27T11:24:29",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Expense not found with ID: 999",
+  "path": "/api/expenses/999"
+}
+```
+
+### Handled exceptions
+
+| Exception | HTTP Status | Scenario |
+|---|---|---|
+| `ResourceNotFoundException` | 404 | Entity not found in database |
+| `BusinessException` | 400 | Business rule violation |
+| `MethodArgumentNotValidException` | 400 | `@Valid` field validation failure |
+| `BadCredentialsException` | 401 | Wrong email or password |
+| `AccessDeniedException` | 403 | User lacks required role |
+| `Exception` (fallback) | 500 | Unexpected server error |
+
+### Domain exceptions
+
+| Class | Usage |
+|---|---|
+| `ResourceNotFoundException` | Thrown when a `User` or `Expense` is not found by ID |
+| `BusinessException` | Thrown when a business rule is violated (e.g. invalid state transition) |
+
+### Design rationale
+
+- Controllers focus on the **happy path** only — no `try-catch` blocks
+- Exception handlers maintain **separation of concerns**
+- A single file controls the entire error contract — easy to maintain and evolve
+
+---
+
 ## Observability
 
 Every request is logged at the start and end using SLF4J with `@Slf4j` (Lombok):
@@ -249,6 +292,9 @@ INFO - POST /api/expenses - end | id: 1
 - [x] Audit flag rule (amount > R$5,000)
 - [x] Role-based authorization (MANAGER / EMPLOYEE)
 - [x] Structured logging
+- [x] Global exception handler (@RestControllerAdvice)
+- [ ] Structured JSON logs with correlation ID
+- [ ] Environment variables (.env)
 - [ ] Unit tests with JUnit 5 + Mockito
 - [ ] Integration tests
 - [ ] Dockerfile (multi-stage build)
