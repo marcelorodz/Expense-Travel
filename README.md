@@ -87,42 +87,64 @@ This API uses **JWT (JSON Web Token)** for stateless authentication.
 
 ## API Endpoints
 
+> All protected endpoints require the header:
+> ```
+> Authorization: Bearer <token>
+> ```
+> Obtain the token via `POST /api/auth/login`.
+
+---
+
 ### Auth
 
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | `/api/auth/login` | Public | Authenticate and receive JWT token |
+#### POST /api/auth/login
+Authenticates a user and returns a JWT token.
 
-**Request body:**
+- **Access:** Public
+- **Method:** `POST`
+- **URL:** `http://localhost:8080/api/auth/login`
+- **Body (raw JSON):**
 ```json
 {
   "email": "manager@concurlite.com",
   "password": "password123"
 }
 ```
-
-**Response:**
+- **Success response — 200 OK:**
 ```json
 {
-  "token": "eyJhbGciOi...",
+  "token": "eyJhbGciOiJIUzM4NCJ9...",
   "email": "manager@concurlite.com",
   "role": "MANAGER"
 }
 ```
+- **Error response — 401 Unauthorized:**
+```json
+{
+  "timestamp": "2026-03-29T17:03:52",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Invalid email or password",
+  "path": "/api/auth/login"
+}
+```
+
+> **Available users:**
+> - `manager@concurlite.com` / `password123` → role: `MANAGER`
+> - `employee@concurlite.com` / `password123` → role: `EMPLOYEE`
 
 ---
 
 ### Expenses
 
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | `/api/expenses` | Authenticated | Create a new expense |
-| GET | `/api/expenses` | Authenticated | List all expenses |
-| GET | `/api/expenses/{id}` | Authenticated | Get expense by ID |
-| PATCH | `/api/expenses/approve/{id}` | MANAGER only | Approve an expense |
-| PATCH | `/api/expenses/reject/{id}` | MANAGER only | Reject an expense |
+#### POST /api/expenses
+Creates a new expense. The `auditFlag` is automatically set to `true` if `amount` exceeds R$ 5,000.00.
 
-**Create expense — request body:**
+- **Access:** Authenticated (EMPLOYEE or MANAGER)
+- **Method:** `POST`
+- **URL:** `http://localhost:8080/api/expenses`
+- **Authorization:** Bearer Token
+- **Body (raw JSON):**
 ```json
 {
   "description": "Flight to São Paulo",
@@ -131,8 +153,7 @@ This API uses **JWT (JSON Web Token)** for stateless authentication.
   "userId": 1
 }
 ```
-
-**Response:**
+- **Success response — 201 Created:**
 ```json
 {
   "id": 1,
@@ -141,14 +162,203 @@ This API uses **JWT (JSON Web Token)** for stateless authentication.
   "category": "TRAVEL",
   "status": "PENDING",
   "auditFlag": true,
-  "createdAt": "2026-03-26T09:05:47.297",
+  "createdAt": "2026-03-29T17:03:52",
   "userName": "Admin Manager"
 }
 ```
+- **Error response — 400 Bad Request (validation):**
+```json
+{
+  "timestamp": "2026-03-29T17:03:52",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Description is required, Amount must be positive",
+  "path": "/api/expenses"
+}
+```
+- **Error response — 404 Not Found (user not found):**
+```json
+{
+  "timestamp": "2026-03-29T17:03:52",
+  "status": 404,
+  "error": "Not Found",
+  "message": "User not found with ID: 99",
+  "path": "/api/expenses"
+}
+```
 
-**Available categories:** `TRAVEL`, `FOOD`, `ACCOMMODATION`
+> **Available categories:** `TRAVEL`, `FOOD`, `ACCOMMODATION`
 
-**Expense statuses:** `PENDING`, `APPROVED`, `REJECTED`
+---
+
+#### GET /api/expenses
+Returns all expenses in the database.
+
+- **Access:** Authenticated (EMPLOYEE or MANAGER)
+- **Method:** `GET`
+- **URL:** `http://localhost:8080/api/expenses`
+- **Authorization:** Bearer Token
+- **Body:** None
+- **Success response — 200 OK:**
+```json
+[
+  {
+    "id": 1,
+    "description": "Flight to São Paulo",
+    "amount": 6500.00,
+    "category": "TRAVEL",
+    "status": "APPROVED",
+    "auditFlag": true,
+    "createdAt": "2026-03-29T17:03:52",
+    "userName": "Admin Manager"
+  },
+  {
+    "id": 2,
+    "description": "Team lunch",
+    "amount": 180.00,
+    "category": "FOOD",
+    "status": "PENDING",
+    "auditFlag": false,
+    "createdAt": "2026-03-29T17:10:00",
+    "userName": "John Employee"
+  }
+]
+```
+
+---
+
+#### GET /api/expenses/{id}
+Returns a single expense by ID.
+
+- **Access:** Authenticated (EMPLOYEE or MANAGER)
+- **Method:** `GET`
+- **URL:** `http://localhost:8080/api/expenses/1`
+- **Authorization:** Bearer Token
+- **Body:** None
+- **Success response — 200 OK:**
+```json
+{
+  "id": 1,
+  "description": "Flight to São Paulo",
+  "amount": 6500.00,
+  "category": "TRAVEL",
+  "status": "PENDING",
+  "auditFlag": true,
+  "createdAt": "2026-03-29T17:03:52",
+  "userName": "Admin Manager"
+}
+```
+- **Error response — 404 Not Found:**
+```json
+{
+  "timestamp": "2026-03-29T17:03:52",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Expense not found with ID: 999",
+  "path": "/api/expenses/999"
+}
+```
+
+---
+
+#### PATCH /api/expenses/approve/{id}
+Approves a pending expense. Only accessible by users with the `MANAGER` role.
+
+- **Access:** MANAGER only
+- **Method:** `PATCH`
+- **URL:** `http://localhost:8080/api/expenses/approve/1`
+- **Authorization:** Bearer Token (MANAGER token)
+- **Body:** None
+- **Success response — 200 OK:**
+```json
+{
+  "id": 1,
+  "description": "Flight to São Paulo",
+  "amount": 6500.00,
+  "category": "TRAVEL",
+  "status": "APPROVED",
+  "auditFlag": true,
+  "createdAt": "2026-03-29T17:03:52",
+  "userName": "Admin Manager"
+}
+```
+- **Error response — 403 Forbidden (wrong role):**
+```json
+{
+  "timestamp": "2026-03-29T17:03:52",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to perform this action",
+  "path": "/api/expenses/approve/1"
+}
+```
+- **Error response — 404 Not Found:**
+```json
+{
+  "timestamp": "2026-03-29T17:03:52",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Expense not found with ID: 999",
+  "path": "/api/expenses/approve/999"
+}
+```
+
+---
+
+#### PATCH /api/expenses/reject/{id}
+Rejects a pending expense. Only accessible by users with the `MANAGER` role.
+
+- **Access:** MANAGER only
+- **Method:** `PATCH`
+- **URL:** `http://localhost:8080/api/expenses/reject/1`
+- **Authorization:** Bearer Token (MANAGER token)
+- **Body:** None
+- **Success response — 200 OK:**
+```json
+{
+  "id": 1,
+  "description": "Flight to São Paulo",
+  "amount": 6500.00,
+  "category": "TRAVEL",
+  "status": "REJECTED",
+  "auditFlag": true,
+  "createdAt": "2026-03-29T17:03:52",
+  "userName": "Admin Manager"
+}
+```
+- **Error response — 403 Forbidden (wrong role):**
+```json
+{
+  "timestamp": "2026-03-29T17:03:52",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "You do not have permission to perform this action",
+  "path": "/api/expenses/reject/1"
+}
+```
+- **Error response — 404 Not Found:**
+```json
+{
+  "timestamp": "2026-03-29T17:03:52",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Expense not found with ID: 999",
+  "path": "/api/expenses/reject/999"
+}
+```
+
+---
+
+### Quick reference
+
+| Method | Endpoint | Access | Body required |
+|---|---|---|---|
+| POST | `/api/auth/login` | Public | Yes |
+| POST | `/api/expenses` | Authenticated | Yes |
+| GET | `/api/expenses` | Authenticated | No |
+| GET | `/api/expenses/{id}` | Authenticated | No |
+| PATCH | `/api/expenses/approve/{id}` | MANAGER only | No |
+| PATCH | `/api/expenses/reject/{id}` | MANAGER only | No |
 
 ---
 
