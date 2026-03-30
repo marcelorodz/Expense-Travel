@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
+@NoArgsConstructor // Lombok gera o construtor vazio
 @AllArgsConstructor
 @Entity
 @Table(name = "expenses")
@@ -28,23 +28,18 @@ public class Expense {
     @Column(nullable = false)
     private Category category;
 
+    // Campos únicos e inicializados:
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ExpenseStatus status;
+    private ExpenseStatus status = ExpenseStatus.PENDING;
 
     @Column(nullable = false)
-    private boolean auditFlag;
+    private boolean auditFlag = false;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    public Expense() {
-        this.createdAt = LocalDateTime.now();
-        this.status = ExpenseStatus.PENDING;
-        this.auditFlag = false;
-    }
 }
