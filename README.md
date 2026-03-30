@@ -15,6 +15,8 @@ A corporate expense processing REST API built with Spring Boot, PostgreSQL, and 
 | Database | PostgreSQL 18 |
 | Build tool | Maven 3.9.14 |
 | Logging | SLF4J + Logback + logstash-logback-encoder 8.0 |
+| Testing | JUnit 5 + Mockito + AssertJ |
+| Containerization | Docker + Docker Compose |
 | Utilities | Lombok |
 
 ---
@@ -557,6 +559,159 @@ Filtering by `correlationId` in Splunk or Datadog returns the complete trace of 
 
 ---
 
+## Testing
+
+This project follows the **Testing Pyramid**: 70% unit tests, 20% integration tests, 10% end-to-end.
+
+### Running all tests
+
+```bash
+mvn test
+```
+
+---
+
+### Unit Tests — ExpenseServiceTest
+
+Located at `src/test/java/com/concurlite/engine/service/ExpenseServiceTest.java`
+
+Uses `@ExtendWith(MockitoExtension.class)` to isolate the service layer from the database. The repository is mocked with Mockito — no real database connection is made.
+
+**What is tested:**
+
+`shouldCalculateAuditFlagCorrectly` — uses `@ParameterizedTest` with `@CsvSource` to validate the audit flag rule across multiple boundary values:
+
+| Amount | Expected auditFlag | Reason |
+|---|---|---|
+| `6000.00` | `true` | Above R$5,000 |
+| `5000.00` | `false` | Exactly R$5,000 — not above |
+| `100.00` | `false` | Below R$5,000 |
+| `0.01` | `false` | Minimum value |
+
+`shouldThrowExceptionWhenUserNotFound` — validates that `ResourceNotFoundException` is thrown when a non-existent user ID is provided.
+
+**Why this matters:**
+- Tests run without a database — ultra fast, suitable for CI/CD pipelines
+- `@ParameterizedTest` avoids duplicated test code for boundary conditions
+- Tests the **sad path** (exception scenarios), not just the happy path
+
+---
+
+### Integration Tests — ExpenseRepositoryTest
+
+Located at `src/test/java/com/concurlite/engine/repository/ExpenseRepositoryTest.java`
+
+Uses `@DataJpaTest` + `@AutoConfigureTestDatabase(replace = NONE)` to boot only the JPA layer and connect to the real PostgreSQL instance.
+
+**What is tested:**
+
+`shouldSaveAndFindExpense` — verifies that an `Expense` is correctly persisted and its generated ID is not null.
+
+`shouldFindByStatusAndAmount` — verifies that the custom JPQL query `findByStatusAndMinAmount` returns the correct result set.
+
+**Test isolation strategy:**
+
+Each test starts with a clean state via `@BeforeEach`:
+
+```java
+@BeforeEach
+void setUp() {
+    expenseRepository.deleteAll();
+    userRepository.deleteAll();
+    // creates a fresh user for the test
+}
+```
+
+This prevents data pollution between test runs — a critical practice for reliable integration tests.
+
+**Why this matters:**
+- Validates that JPA entity mappings (`@Entity`, `@ManyToOne`, `@Column`) are correct
+- Validates that custom JPQL queries return the expected results
+- Catches schema mismatches before they reach production
+
+---
+
+## Docker
+
+The application is fully containerized and can be run without any local Java or PostgreSQL installation.
+
+### Prerequisites
+
+- Docker Desktop running
+
+### Run with Docker Compose
+
+```bash
+docker-compose up --build
+```
+
+This single command will:
+1. Pull the `postgres:18-alpine` image
+2. Build the Spring Boot application image using the multi-stage `Dockerfile`
+3. Start the database container (`concurlite-db`)
+4. Start the application container (`concurlite-app`)
+5. Make the API available at `http://localhost:8080`
+
+### Stop the containers
+
+```bash
+docker-compose down
+```
+
+---
+
+### Dockerfile — multi-stage build
+
+```dockerfile
+# Stage 1: Build
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
+
+# Stage 2: Run (lightweight image)
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+The build stage contains the full JDK and Maven. The final image contains only the JRE and the compiled `.jar`, making it significantly smaller and more secure.
+
+---
+
+### docker-compose.yml
+
+```yaml
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: concurlite-db
+    environment:
+      POSTGRES_DB: concurlite
+      POSTGRES_USER: concurlite_user
+      POSTGRES_PASSWORD: concurlite123
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    container_name: concurlite-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/concurlite
+      SPRING_DATASOURCE_USERNAME: concurlite_user
+      SPRING_DATASOURCE_PASSWORD: concurlite123
+    depends_on:
+      - db
+```
+
+Note that the database URL uses `db` (the service name) instead of `localhost`. Docker creates an internal network where containers communicate by service name.
+
+---
+
 ## Roadmap
 
 - [x] JWT Authentication
@@ -566,8 +721,9 @@ Filtering by `correlationId` in Splunk or Datadog returns the complete trace of 
 - [x] Global exception handler (@RestControllerAdvice)
 - [x] Structured JSON logs (logstash-logback-encoder)
 - [x] Correlation ID per request (MDC)
+- [x] Unit tests with JUnit 5 + Mockito (@ParameterizedTest)
+- [x] Integration tests (@DataJpaTest + PostgreSQL)
+- [x] Dockerfile (multi-stage build)
+- [x] Docker Compose (app + database)
 - [ ] Environment variables (.env)
-- [ ] Unit tests with JUnit 5 + Mockito
-- [ ] Integration tests
-- [ ] Dockerfile (multi-stage build)
-- [ ] Docker Compose (app + database)
+- [ ] Testcontainers for isolated integration tests
