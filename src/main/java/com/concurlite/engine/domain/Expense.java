@@ -41,4 +41,10 @@ public class Expense {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    public Expense() {
+        this.createdAt = LocalDateTime.now();
+        this.status = ExpenseStatus.PENDING;
+        this.auditFlag = false;
+    }
 }

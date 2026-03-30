@@ -1,10 +1,6 @@
 package com.concurlite.engine.service;
 
-import com.concurlite.engine.domain.ResourceNotFoundException;
-
-import com.concurlite.engine.domain.Expense;
-import com.concurlite.engine.domain.ExpenseStatus;
-import com.concurlite.engine.domain.User;
+import com.concurlite.engine.domain.*;
 import com.concurlite.engine.dto.ExpenseRequest;
 import com.concurlite.engine.dto.ExpenseResponse;
 import com.concurlite.engine.repository.ExpenseRepository;
@@ -13,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
-
-
 import java.util.List;
 
 @Slf4j
@@ -25,11 +19,13 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final UserRepository userRepository;
 
+    private static final BigDecimal AUDIT_THRESHOLD = new BigDecimal("4000.00");
+
     public ExpenseResponse create(ExpenseRequest request) {
         log.info("Creating expense for user ID: {}", request.getUserId());
 
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + request.getUserId()));
 
         Expense expense = new Expense();
         expense.setDescription(request.getDescription());
@@ -37,8 +33,8 @@ public class ExpenseService {
         expense.setCategory(request.getCategory());
         expense.setUser(user);
 
-        // REGRA DE NEGÓCIO AQUI:
-        expense.setAuditFlag(request.getAmount().compareTo(new BigDecimal("5000.00")) > 0);
+        // Regra de negócio: Obrigatório auditar se valor > 4000
+        expense.setAuditFlag(request.getAmount().compareTo(AUDIT_THRESHOLD) > 0);
 
         Expense saved = expenseRepository.save(expense);
         log.info("Expense created with ID: {} | auditFlag: {}", saved.getId(), saved.isAuditFlag());
@@ -55,10 +51,7 @@ public class ExpenseService {
 
     public List<ExpenseResponse> findAll() {
         log.info("Fetching all expenses");
-        return expenseRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        return expenseRepository.findAll().stream().map(this::toResponse).toList();
     }
 
     public ExpenseResponse approve(Long id) {
@@ -73,7 +66,7 @@ public class ExpenseService {
 
     private ExpenseResponse updateStatus(Long id, ExpenseStatus status) {
         Expense expense = expenseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Expense not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Expense not found with ID: " + id));
         expense.setStatus(status);
         Expense saved = expenseRepository.save(expense);
         return toResponse(saved);
