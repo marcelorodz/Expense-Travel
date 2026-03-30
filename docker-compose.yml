@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: concurlite_user
       POSTGRES_PASSWORD: concurlite123
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
   app:
     build: .          # O ponto (.) significa "a pasta raiz onde este arquivo está"
