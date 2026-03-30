@@ -1,4 +1,4 @@
-package com.concurlite.engine.exception;
+package exception;
 
 import com.concurlite.engine.domain.BusinessException;
 import com.concurlite.engine.domain.ResourceNotFoundException;
