@@ -10,7 +10,7 @@ services:
       - "5433:5432"
 
   app:
-    build: .          # O ponto (.) significa "a pasta raiz onde este arquivo está"
+    build: .
     container_name: concurlite-app
     ports:
       - "8080:8080"
