@@ -17,6 +17,7 @@ A corporate expense processing REST API built with Spring Boot, PostgreSQL, and 
 | Logging | SLF4J + Logback + logstash-logback-encoder 8.0 |
 | Testing | JUnit 5 + Mockito + AssertJ |
 | Containerization | Docker + Docker Compose |
+| Frontend | React 18 + Vite + Tailwind CSS v4 + Axios |
 | Utilities | Lombok |
 
 ---
@@ -559,6 +560,140 @@ Filtering by `correlationId` in Splunk or Datadog returns the complete trace of 
 
 ---
 
+## Frontend
+
+The project includes a modern React frontend that consumes the REST API, managing the JWT token on the client side and rendering the interface based on the authenticated user's role.
+
+### Tech stack
+
+| Layer | Technology |
+|---|---|
+| Framework | React 18 + Vite |
+| Styling | Tailwind CSS v4 |
+| HTTP client | Axios (with request interceptors) |
+| Icons | Lucide React |
+| Auth | JWT stored in localStorage |
+
+---
+
+### Project structure
+
+```
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── Auth.jsx        # Login and registration screen
+│   │   └── Dashboard.jsx   # Expense management dashboard
+│   ├── services/
+│   │   └── api.js          # Axios instance with JWT interceptor
+│   ├── App.jsx             # Root component with auth state management
+│   └── index.css           # Tailwind CSS directives
+├── tailwind.config.js
+├── postcss.config.js
+└── package.json
+```
+
+---
+
+### Architecture
+
+The frontend runs as a standalone Single Page Application (SPA) on port `5173`, communicating with the Spring Boot API on port `8080` via JSON. This separation allows independent scaling and deployment of each layer.
+
+```
+Browser (React — port 5173)
+        │
+        │  HTTP + Bearer Token (JWT)
+        ▼
+Spring Boot API (port 8080)
+        │
+        ▼
+   PostgreSQL
+```
+
+The Axios interceptor automatically attaches the JWT to every request:
+
+```javascript
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+```
+
+---
+
+### Authentication flow
+
+1. User fills in the login or registration form in `Auth.jsx`
+2. On login, the API returns a JWT token, email and role
+3. These values are stored in `localStorage`
+4. `App.jsx` reads the stored token on load — if present, shows the Dashboard directly
+5. On logout, `localStorage` is cleared and the login screen is shown again
+
+---
+
+### Role-based UI
+
+The Dashboard renders different controls based on the authenticated user's role:
+
+| Role | Can see expenses | Can submit expenses | Can approve / reject |
+|---|---|---|---|
+| `EMPLOYEE` | ✅ | ✅ | ❌ |
+| `MANAGER` | ✅ | ✅ | ✅ |
+
+Approve and Reject buttons only appear for `MANAGER` users and only on `PENDING` expenses. The role check happens on the frontend for UX — but authorization is always enforced on the backend via Spring Security.
+
+---
+
+### Running the frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Access the UI at `http://localhost:5173`.
+
+> The Spring Boot backend must be running on port `8080` before starting the frontend.
+
+---
+
+### CORS configuration
+
+Because the frontend (port `5173`) and backend (port `8080`) run on different origins, CORS is configured in `SecurityConfig.java`:
+
+```java
+configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+```
+
+Preflight `OPTIONS` requests are explicitly permitted in the security filter chain to allow the browser handshake to complete before the actual request is sent.
+
+---
+
+### User registration
+
+New users can be registered via the UI or directly via the API:
+
+```json
+POST /api/auth/register
+
+{
+  "name": "Marcelo Dev",
+  "email": "marcelo@test.com",
+  "password": "password123",
+  "role": "MANAGER"
+}
+```
+
+Passwords are BCrypt-encoded before being stored. Duplicate emails return a `400 Bad Request`.
+
+---
+
 ## Testing
 
 This project follows the **Testing Pyramid**: 70% unit tests, 20% integration tests, 10% end-to-end.
@@ -725,5 +860,8 @@ Note that the database URL uses `db` (the service name) instead of `localhost`. 
 - [x] Integration tests (@DataJpaTest + PostgreSQL)
 - [x] Dockerfile (multi-stage build)
 - [x] Docker Compose (app + database)
+- [x] React frontend (Login, Registration, Dashboard)
+- [x] Role-based UI (Manager sees approve/reject buttons)
+- [x] CORS configuration for decoupled frontend/backend
 - [ ] Environment variables (.env)
 - [ ] Testcontainers for isolated integration tests
