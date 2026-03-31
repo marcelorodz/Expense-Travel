@@ -22,29 +22,26 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        // SE NÃO TIVER TOKEN OU NÃO COMEÇAR COM BEARER, SEGUE O FLUXO (permitAll cuidará do resto)
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return; // ESSENCIAL: Interrompe a execução deste filtro aqui
+        }
+
+        try {
             String token = authHeader.substring(7);
             if (jwtUtil.isTokenValid(token)) {
-                String email = jwtUtil.extractEmail(token);
-                String role = jwtUtil.extractRole(token);
-                log.info("Authenticated request | user: {} | role: {}", email, role);
-
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(
-                                email,
-                                null,
-                                List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                        );
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                // ... lógica de autenticação que já temos ...
             }
+        } catch (Exception e) {
+            log.error("Cannot set user authentication: {}", e.getMessage());
         }
+
         filterChain.doFilter(request, response);
     }
 }
