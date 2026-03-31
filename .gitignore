@@ -31,3 +31,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Pastas do Eclipse
+.metadata/
+.settings/
+.classpath
+.project
+
+# Pastas de Build e Cache
+target/
+.idea/
+*.iml
+.DS_Store
