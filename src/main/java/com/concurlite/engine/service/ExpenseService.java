@@ -1,10 +1,10 @@
-package com.concurlite.engine.service;
+package com.expenselite.engine.service;
 
-import com.concurlite.engine.domain.*;
-import com.concurlite.engine.dto.ExpenseRequest;
-import com.concurlite.engine.dto.ExpenseResponse;
-import com.concurlite.engine.repository.ExpenseRepository;
-import com.concurlite.engine.repository.UserRepository;
+import com.expenselite.engine.domain.*;
+import com.expenselite.engine.dto.ExpenseRequest;
+import com.expenselite.engine.dto.ExpenseResponse;
+import com.expenselite.engine.repository.ExpenseRepository;
+import com.expenselite.engine.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
