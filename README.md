@@ -1,6 +1,6 @@
-# ConcurLite Engine
+# Expense Engine API
 
-A corporate expense processing REST API built with Spring Boot, PostgreSQL, and JWT authentication. Inspired by SAP Concur's architecture, this project covers business logic, security, and observability.
+A corporate expense processing REST API built with Spring Boot, PostgreSQL, and JWT authentication. This project covers business logic, security, and observability.
 
 ---
 
@@ -25,7 +25,7 @@ A corporate expense processing REST API built with Spring Boot, PostgreSQL, and 
 ## Project Structure
 
 ```
-com.concurlite.engine
+com.expenselite.engine
 ├── domain          # Entities and enums (User, Expense, Role, Category, ExpenseStatus)
 ├── repository      # JPA interfaces (UserRepository, ExpenseRepository)
 ├── service         # Business logic (ExpenseService, AuthService)
@@ -109,7 +109,7 @@ Authenticates a user and returns a JWT token.
 - **Body (raw JSON):**
 ```json
 {
-  "email": "manager@concurlite.com",
+  "email": "manager@expenselite.com",
   "password": "password123"
 }
 ```
@@ -117,7 +117,7 @@ Authenticates a user and returns a JWT token.
 ```json
 {
   "token": "eyJhbGciOiJIUzM4NCJ9...",
-  "email": "manager@concurlite.com",
+  "email": "manager@expenselite.com",
   "role": "MANAGER"
 }
 ```
@@ -133,8 +133,8 @@ Authenticates a user and returns a JWT token.
 ```
 
 > **Available users:**
-> - `manager@concurlite.com` / `password123` → role: `MANAGER`
-> - `employee@concurlite.com` / `password123` → role: `EMPLOYEE`
+> - `manager@expenselite.com` / `password123` → role: `MANAGER`
+> - `employee@expenselite.com` / `password123` → role: `EMPLOYEE`
 
 ---
 
@@ -376,10 +376,10 @@ Rejects a pending expense. Only accessible by users with the `MANAGER` role.
 ### 1. Create the database
 
 ```sql
-CREATE DATABASE concurlite;
-CREATE USER concurlite_user WITH PASSWORD 'concurlite123';
-GRANT ALL PRIVILEGES ON DATABASE concurlite TO concurlite_user;
-GRANT ALL ON SCHEMA public TO concurlite_user;
+CREATE DATABASE expenselite;
+CREATE USER expenselite_user WITH PASSWORD 'expenselite123';
+GRANT ALL PRIVILEGES ON DATABASE expenselite TO expenselite_user;
+GRANT ALL ON SCHEMA public TO expenselite_user;
 ```
 
 ### 2. Configure the application
@@ -387,9 +387,9 @@ GRANT ALL ON SCHEMA public TO concurlite_user;
 Edit `src/main/resources/application.properties`:
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/concurlite
-spring.datasource.username=concurlite_user
-spring.datasource.password=concurlite123
+spring.datasource.url=jdbc:postgresql://localhost:5432/expenselite
+spring.datasource.username=expenselite_user
+spring.datasource.password=expenselite123
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 spring.jpa.hibernate.ddl-auto=update
@@ -397,7 +397,7 @@ spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 
 server.port=8080
-spring.application.name=concurlite-engine
+spring.application.name=expenselite-engine
 ```
 
 ### 3. Run the application
@@ -414,8 +414,8 @@ Generate a BCrypt hash for your password by running `PasswordGenerator.java`, th
 
 ```sql
 INSERT INTO users (name, email, password, role) VALUES
-  ('Admin Manager', 'manager@concurlite.com', '<bcrypt_hash>', 'MANAGER'),
-  ('John Employee', 'employee@concurlite.com', '<bcrypt_hash>', 'EMPLOYEE');
+  ('Admin Manager', 'manager@expenselite.com', '<bcrypt_hash>', 'MANAGER'),
+  ('John Employee', 'employee@expenselite.com', '<bcrypt_hash>', 'EMPLOYEE');
 ```
 
 ---
@@ -509,8 +509,8 @@ Every log entry contains the following fields:
 {
   "@timestamp": "2026-03-29T17:03:52.447-03:00",
   "@version": "1",
-  "message": "Login successful for email: manager@concurlite.com",
-  "logger_name": "com.concurlite.engine.service.AuthService",
+  "message": "Login successful for email: manager@expenselite.com",
+  "logger_name": "com.expenselite.engine.service.AuthService",
   "thread_name": "http-nio-8080-exec-3",
   "level": "INFO",
   "level_value": 20000,
@@ -527,7 +527,7 @@ This allows tracing the full journey of a single request across all layers:
 ```
 correlationId = "a3dde6e4-..."
 
-INFO - Authenticated request | user: manager@concurlite.com
+INFO - Authenticated request | user: manager@expenselite.com
 INFO - PATCH /api/expenses/approve/1 - start
 INFO - Approving expense ID: 1
 INFO - PATCH /api/expenses/approve/1 - end
@@ -708,7 +708,7 @@ mvn test
 
 ### Unit Tests — ExpenseServiceTest
 
-Located at `src/test/java/com/concurlite/engine/service/ExpenseServiceTest.java`
+Located at `src/test/java/com/expenselite/engine/service/ExpenseServiceTest.java`
 
 Uses `@ExtendWith(MockitoExtension.class)` to isolate the service layer from the database. The repository is mocked with Mockito — no real database connection is made.
 
@@ -734,7 +734,7 @@ Uses `@ExtendWith(MockitoExtension.class)` to isolate the service layer from the
 
 ### Integration Tests — ExpenseRepositoryTest
 
-Located at `src/test/java/com/concurlite/engine/repository/ExpenseRepositoryTest.java`
+Located at `src/test/java/com/expenselite/engine/repository/ExpenseRepositoryTest.java`
 
 Uses `@DataJpaTest` + `@AutoConfigureTestDatabase(replace = NONE)` to boot only the JPA layer and connect to the real PostgreSQL instance.
 
@@ -783,8 +783,8 @@ docker-compose up --build
 This single command will:
 1. Pull the `postgres:18-alpine` image
 2. Build the Spring Boot application image using the multi-stage `Dockerfile`
-3. Start the database container (`concurlite-db`)
-4. Start the application container (`concurlite-app`)
+3. Start the database container (`expenselite-db`)
+4. Start the application container (`expenselite-app`)
 5. Make the API available at `http://localhost:8080`
 
 ### Stop the containers
@@ -822,23 +822,23 @@ The build stage contains the full JDK and Maven. The final image contains only t
 services:
   db:
     image: postgres:18-alpine
-    container_name: concurlite-db
+    container_name: expenselite-db
     environment:
-      POSTGRES_DB: concurlite
-      POSTGRES_USER: concurlite_user
-      POSTGRES_PASSWORD: concurlite123
+      POSTGRES_DB: expenselite
+      POSTGRES_USER: expenselite_user
+      POSTGRES_PASSWORD: expenselite123
     ports:
       - "5432:5432"
 
   app:
     build: .
-    container_name: concurlite-app
+    container_name: expenselite-app
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/concurlite
-      SPRING_DATASOURCE_USERNAME: concurlite_user
-      SPRING_DATASOURCE_PASSWORD: concurlite123
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/expenselite
+      SPRING_DATASOURCE_USERNAME: expenselite_user
+      SPRING_DATASOURCE_PASSWORD: expenselite123
     depends_on:
       - db
 ```
