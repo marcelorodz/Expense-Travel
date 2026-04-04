@@ -9,7 +9,7 @@
 		<version>3.5.12</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.concurlite</groupId>
+	<groupId>com.expenselite</groupId>
 	<artifactId>engine</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name />
