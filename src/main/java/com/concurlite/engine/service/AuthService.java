@@ -1,10 +1,10 @@
-package com.concurlite.engine.service;
+package com.expenselite.engine.service;
 
-import com.concurlite.engine.domain.User;
-import com.concurlite.engine.dto.AuthRequest;
-import com.concurlite.engine.dto.AuthResponse;
-import com.concurlite.engine.repository.UserRepository;
-import com.concurlite.engine.security.JwtUtil;
+import com.expenselite.engine.domain.User;
+import com.expenselite.engine.dto.AuthRequest;
+import com.expenselite.engine.dto.AuthResponse;
+import com.expenselite.engine.repository.UserRepository;
+import com.expenselite.engine.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
