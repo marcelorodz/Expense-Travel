@@ -1,4 +1,4 @@
-package com.concurlite.engine.domain;
+package com.expenselite.engine.domain;
 
 import jakarta.persistence.*;
 import lombok.Data;
