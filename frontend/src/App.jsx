@@ -1,27 +1,36 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Auth from './components/Auth'
+import Dashboard from './components/Dashboard'
 
 function App() {
   const [user, setUser] = useState(null)
 
-  // Se não houver usuário logado, mostra a tela de Auth
+  // Persistência simples: Se der F5, tenta recuperar a sessão
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    const email = localStorage.getItem('email');
+    const id = localStorage.getItem('userId');
+    if (token && role) {
+      setUser({ token, role, email, id });
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setUser(null);
+  };
+
   if (!user) {
-    return <Auth onLoginSuccess={(data) => setUser(data)} />
+    return <Auth onLoginSuccess={(data) => {
+      // Salva no localStorage para não perder no refresh
+      localStorage.setItem('userId', data.id);
+      localStorage.setItem('email', data.email);
+      setUser(data);
+    }} />
   }
 
-  // Se houver usuário, mostra o Dashboard (vamos criar em breve)
-  return (
-    <div className="p-8 text-center">
-      <h1 className="text-3xl font-bold">Welcome, {user.email}!</h1>
-      <p className="mt-4">Your role is: {user.role}</p>
-      <button 
-        onClick={() => { localStorage.clear(); setUser(null); }}
-        className="mt-6 bg-red-500 text-white px-4 py-2 rounded"
-      >
-        Logout
-      </button>
-    </div>
-  )
+  return <Dashboard user={user} onLogout={handleLogout} />
 }
 
 export default App

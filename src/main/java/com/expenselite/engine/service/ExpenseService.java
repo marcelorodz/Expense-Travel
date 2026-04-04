@@ -5,9 +5,12 @@ import com.expenselite.engine.dto.ExpenseRequest;
 import com.expenselite.engine.dto.ExpenseResponse;
 import com.expenselite.engine.repository.ExpenseRepository;
 import com.expenselite.engine.repository.UserRepository;
+import com.expenselite.engine.domain.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -50,8 +53,25 @@ public class ExpenseService {
     }
 
     public List<ExpenseResponse> findAll() {
-        log.info("Fetching all expenses");
-        return expenseRepository.findAll().stream().map(this::toResponse).toList();
+  
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        
+      
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Logged user not found"));
+
+        log.info("Fetching expenses. User: {} | Role: {}", email, currentUser.getRole());
+
+  
+        List<Expense> results;
+        if (currentUser.getRole() == Role.MANAGER) {
+            results = expenseRepository.findAll();
+        } else {
+            results = expenseRepository.findByUser(currentUser);
+        }
+
+        return results.stream().map(this::toResponse).toList();
     }
 
     public ExpenseResponse approve(Long id) {

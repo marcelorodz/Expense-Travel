@@ -27,16 +27,30 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // SE NÃO TIVER TOKEN OU NÃO COMEÇAR COM BEARER, SEGUE O FLUXO (permitAll cuidará do resto)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
-            return; // ESSENCIAL: Interrompe a execução deste filtro aqui
+            return;
         }
 
         try {
             String token = authHeader.substring(7);
             if (jwtUtil.isTokenValid(token)) {
-                // ... lógica de autenticação que já temos ...
+                // AQUI ESTAVA O ERRO: Precisamos extrair e DEFINIR a autenticação
+                String email = jwtUtil.extractEmail(token);
+                String role = jwtUtil.extractRole(token);
+
+                log.info("Authenticated request | user: {} | role: {}", email, role);
+
+                // Criamos o objeto de autenticação que o Spring entende
+                // O prefixo ROLE_ é adicionado aqui para dar match com o hasRole("MANAGER")
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        email,
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                );
+
+                // Definimos o usuário no CONTEXTO de segurança da requisição (ThreadLocal)
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (Exception e) {
             log.error("Cannot set user authentication: {}", e.getMessage());
