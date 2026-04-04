@@ -1,4 +1,4 @@
-package com.concurlite.engine.dto;
+package com.expenselite.engine.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
