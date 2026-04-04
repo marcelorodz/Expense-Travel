@@ -1,7 +1,7 @@
-package com.concurlite.engine.dto;
+package com.expenselite.engine.dto;
 
-import com.concurlite.engine.domain.Category;
-import com.concurlite.engine.domain.ExpenseStatus;
+import com.expenselite.engine.domain.Category;
+import com.expenselite.engine.domain.ExpenseStatus;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
