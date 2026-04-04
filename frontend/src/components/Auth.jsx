@@ -40,7 +40,7 @@ export default function Auth({ onLoginSuccess }) {
             <div className="p-2 bg-indigo-600 rounded-lg">
               <Sparkles size={24} className="text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-800">ConcurLite</span>
+            <span className="text-xl font-bold tracking-tight text-slate-800">ExpenseLite</span>
           </div>
 
           <div className="mb-8">
@@ -149,7 +149,7 @@ export default function Auth({ onLoginSuccess }) {
 
         {/* Footer sutil */}
         <div className="bg-slate-50 p-4 text-center border-t border-slate-100">
-          <p className="text-xs text-slate-400">© 2024 ConcurLite. Enterprise Security Standard.</p>
+          <p className="text-xs text-slate-400">© 2024 ExpenseLite. Enterprise Security Standard.</p>
         </div>
       </div>
     </div>
