@@ -1,8 +1,8 @@
-package com.concurlite.engine.controller;
+package com.expenselite.engine.controller;
 
-import com.concurlite.engine.dto.ExpenseRequest;
-import com.concurlite.engine.dto.ExpenseResponse;
-import com.concurlite.engine.service.ExpenseService;
+import com.expenselite.engine.dto.ExpenseRequest;
+import com.expenselite.engine.dto.ExpenseResponse;
+import com.expenselite.engine.service.ExpenseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
