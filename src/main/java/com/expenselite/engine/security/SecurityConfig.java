@@ -66,7 +66,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Origem permitida (Seu Frontend React/Vite)
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); 
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173", 
+                "https://https://expense-travel-5gzd.vercel.app")); 
         
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
