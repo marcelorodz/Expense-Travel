@@ -19,7 +19,7 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final UserRepository userRepository;
 
-    private static final BigDecimal AUDIT_THRESHOLD = new BigDecimal("4000.00");
+    private static final BigDecimal AUDIT_THRESHOLD = new BigDecimal("5000.00");
 
     public ExpenseResponse create(ExpenseRequest request) {
         log.info("Creating expense for user ID: {}", request.getUserId());
