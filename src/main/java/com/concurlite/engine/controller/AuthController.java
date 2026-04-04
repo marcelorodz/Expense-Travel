@@ -1,10 +1,10 @@
-package com.concurlite.engine.controller;
+package com.expenselite.engine.controller;
 
-import com.concurlite.engine.domain.User;
-import com.concurlite.engine.dto.AuthRequest;
-import com.concurlite.engine.dto.AuthResponse;
-import com.concurlite.engine.repository.UserRepository;
-import com.concurlite.engine.service.AuthService;
+import com.expenselite.engine.domain.User;
+import com.expenselite.engine.dto.AuthRequest;
+import com.expenselite.engine.dto.AuthResponse;
+import com.expenselite.engine.repository.UserRepository;
+import com.expenselite.engine.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
