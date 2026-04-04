@@ -1,4 +1,4 @@
-package com.concurlite.engine.domain;
+package com.expenselite.engine.domain;
 
 public enum ExpenseStatus {
     PENDING,
