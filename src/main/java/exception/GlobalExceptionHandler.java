@@ -1,8 +1,8 @@
 package exception;
 
-import com.concurlite.engine.domain.BusinessException;
-import com.concurlite.engine.domain.ResourceNotFoundException;
-import com.concurlite.engine.dto.ErrorResponse;
+import com.expenselite.engine.domain.BusinessException;
+import com.expenselite.engine.domain.ResourceNotFoundException;
+import com.expenselite.engine.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
