@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api' // URL do seu Spring Boot
+  baseURL: 'http://localhost:8080/api' // Sring Boot URL
 });
 
-// Interceptor: Toda requisição levará o Token se ele existir no computador
+// Interceptor: Every request will include the token if it exists on the machine.
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
