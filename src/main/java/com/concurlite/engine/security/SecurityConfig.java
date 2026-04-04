@@ -1,4 +1,4 @@
-package com.concurlite.engine.security;
+package com.expenselite.engine.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
