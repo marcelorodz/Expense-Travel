@@ -66,6 +66,13 @@ public void prePersist() {
     this.auditFlag = this.amount.compareTo(new BigDecimal("5000.00")) > 0;
 }
 ```
+### Data Isolation (Anti-BOLA)
+The system enforces strict resource ownership. Queries are dynamically filtered based on the authenticated principal extracted from the `SecurityContextHolder`:
+
+- `EMPLOYEE` — can only view and manage their own expenses
+- `MANAGER` — has full administrative visibility across all expenses
+
+This prevents Broken Object Level Authorization (OWASP API Top 1).
 
 ### Roles
 | Role | Permissions |
@@ -865,13 +872,7 @@ Note that the database URL uses `db` (the service name) instead of `localhost`. 
 
 ---
 
-### Data Isolation (Anti-BOLA)
-The system enforces strict resource ownership. Queries are dynamically filtered based on the authenticated principal extracted from the `SecurityContextHolder`:
 
-- `EMPLOYEE` — can only view and manage their own expenses
-- `MANAGER` — has full administrative visibility across all expenses
-
-This prevents Broken Object Level Authorization (OWASP API Top 1).
 
 
 
