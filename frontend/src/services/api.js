@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api' // Sring Boot URL
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 });
 
 // Interceptor: Every request will include the token if it exists on the machine.
