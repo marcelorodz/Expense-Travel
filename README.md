@@ -90,6 +90,24 @@ This API uses **JWT (JSON Web Token)** for stateless authentication.
 
 ## API Endpoints
 
+#### POST /api/auth/register
+Registers a new user.
+
+- **Access:** Public
+- **Method:** `POST`
+- **URL:** `http://localhost:8080/api/auth/register`
+- **Body (raw JSON):**
+```json
+{
+  "name": "Test",
+  "email": "test@expenselite.com",
+  "password": "password123",
+  "role": "MANAGER"
+}
+```
+- **Success response — 200 OK:** `"User registered successfully with role: MANAGER"`
+- **Error response — 400 Bad Request:** `"Error: Email is already in use!"`
+
 > All protected endpoints require the header:
 > ```
 > Authorization: Bearer <token>
@@ -828,7 +846,7 @@ services:
       POSTGRES_USER: expenselite_user
       POSTGRES_PASSWORD: expenselite123
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
   app:
     build: .
@@ -846,6 +864,16 @@ services:
 Note that the database URL uses `db` (the service name) instead of `localhost`. Docker creates an internal network where containers communicate by service name.
 
 ---
+
+### Data Isolation (Anti-BOLA)
+The system enforces strict resource ownership. Queries are dynamically filtered based on the authenticated principal extracted from the `SecurityContextHolder`:
+
+- `EMPLOYEE` — can only view and manage their own expenses
+- `MANAGER` — has full administrative visibility across all expenses
+
+This prevents Broken Object Level Authorization (OWASP API Top 1).
+
+
 
 ## Roadmap
 
