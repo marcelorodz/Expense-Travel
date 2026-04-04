@@ -1,7 +1,7 @@
-package com.concurlite.engine.repository;
+package com.expenselite.engine.repository;
 
-import com.concurlite.engine.domain.Expense;
-import com.concurlite.engine.domain.ExpenseStatus;
+import com.expenselite.engine.domain.Expense;
+import com.expenselite.engine.domain.ExpenseStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
