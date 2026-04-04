@@ -1,6 +1,6 @@
-package com.concurlite.engine.security;
+package com.expenselite.engine.security;
 
-import com.concurlite.engine.repository.UserRepository;
+import com.expenselite.engine.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        com.concurlite.engine.domain.User user = userRepository.findByEmail(email)
+        com.expenselite.engine.domain.User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
         return new org.springframework.security.core.userdetails.User(
