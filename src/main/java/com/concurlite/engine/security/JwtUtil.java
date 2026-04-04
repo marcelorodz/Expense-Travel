@@ -1,4 +1,4 @@
-package com.concurlite.engine.security;
+package com.expenselite.engine.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -9,7 +9,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private static final String SECRET = "concurlite-secret-key-2024-very-long-string-256bits";
+    private static final String SECRET = "expenselite-secret-key-2024-very-long-string-256bits";
     private static final long EXPIRATION = 86400000L;
     private final SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
