@@ -1,6 +1,6 @@
-package com.concurlite.engine.dto;
+package com.expenselite.engine.dto;
 
-import com.concurlite.engine.domain.Category;
+import com.expenselite.engine.domain.Category;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
