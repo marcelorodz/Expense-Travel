@@ -1,4 +1,4 @@
-package com.concurlite.engine.dto;
+package com.expenselite.engine.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
