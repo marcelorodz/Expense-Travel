@@ -1,7 +1,7 @@
-package com.concurlite.engine.repository;
+package com.expenselite.engine.repository;
 
 
-import com.concurlite.engine.domain.*;
+import com.expenselite.engine.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
