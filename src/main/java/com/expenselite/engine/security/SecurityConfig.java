@@ -43,7 +43,7 @@ public class SecurityConfig {
             // 4. Autorizações
             .authorizeHttpRequests(auth -> auth
                 // LIBERAÇÃO TOTAL PARA OPTIONS (Crucial para o navegador)
-                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+            		.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**", "/error", "/").permitAll()
                 .requestMatchers("/api/expenses/approve/**", "/api/expenses/reject/**").hasRole("MANAGER")
                 .anyRequest().authenticated()
@@ -66,9 +66,11 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Origem permitida (Seu Frontend React/Vite)
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173", 
-                "https://https://expense-travel-5gzd.vercel.app")); 
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:5173",
+                "https://*.vercel.app",
+                "https://expense-travel-*.vercel.app" // Garante o match com o seu projeto específico
+            )); 
         
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
