@@ -1,4 +1,4 @@
-package com.concurlite.engine;
+package com.expenselite.engine;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
